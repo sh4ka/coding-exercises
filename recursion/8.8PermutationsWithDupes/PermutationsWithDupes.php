@@ -3,46 +3,53 @@
 
 class PermutationsWithDupes
 {
-    protected $rawString;
-    protected $permutations = [];
+    public $permutations = [];
 
     public function __construct($string = '')
     {
-        $this->rawString = $string;
-        $this->strlen = strlen($this->rawString);
-        $this->calcPermutations($this->rawString);
+        $this->permutations = $this->calcPermutations($string);
+        var_dump($this->permutations);
     }
 
-    public function calcPermutations($base = '')
+    public function calcPermutations($string)
     {
-        $letters = str_split($base);
-        foreach ($letters as $letter) {
-            $this->permutations[] = $this->getPermutations($letter, $this->rawString);
-        }
+        $result = [];
+        $map = $this->buildHasmap($string);
+        $result = $this->printPermutations($map, '', strlen($string), $result);
+
+        return $result;
     }
 
-    public function getPermutations($baseLetter = '', $remainder = '')
+    public function printPermutations(array $map, string $prefix, int $remaining, array $result): array {
+        // base case
+        if ($remaining === 0) {
+            $result[] = $prefix;
+            return $result;
+        }
+
+        foreach ($map as $c => $count) {
+            if ($count > 0) {
+                $map[$c]--;
+                $result = $this->printPermutations($map, $prefix . $c, $remaining - 1, $result);
+                $map[$c] = $count;
+            }
+        }
+
+        return $result;
+    }
+
+    protected function buildHasmap($string)
     {
-        if (strlen($remainder) == 1) {
-            return $remainder;
+        $hashmap = [];
+        foreach (str_split($string) as $letter) {
+            if (!array_key_exists($letter, $hashmap)) {
+                $hashmap[$letter] = 0;
+            }
+            $hashmap[$letter]++;
         }
-        $letters = str_split($remainder);
-        $temp = $letters[0];
-        $letters[0] = $letters[1];
-        $letters[1] = $temp;
-        foreach ($letters as $letter) {
-            // take rest of letters and shuffle them, this letter always first
-            $remainder = preg_replace('/'.$letter.'/', '', $remainder, 1);
-            return $baseLetter . $this->getPermutations($baseLetter, $remainder);
-        }
-    }
 
-    public function printPermutations() {
-        foreach ($this->permutations as $string) {
-            echo $string . PHP_EOL;
-        }
+        return $hashmap;
     }
 }
 
 $perm = new PermutationsWithDupes('test');
-$perm->printPermutations();
